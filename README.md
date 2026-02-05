@@ -7,7 +7,7 @@
 > **WORK IN PROGRESS:** This project is currently under active development. Some features (like Email Breach Scanning) are planned but not yet implemented.
 
 **notSafe.** is a real-time password intelligence platform designed to move beyond simple "strength meters." It combines a public-facing password auditor with a private, multi-tenant "Mission Control" dashboard for enterprise security teams.
-
+ 
 ---
 
 ## 🏗 Architecture
