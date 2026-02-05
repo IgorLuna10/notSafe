@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>notSafe. | API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+    
+    <style>
+        /* --- CUSTOM DARK THEME --- */
+        body { background-color: #0f172a; margin: 0; padding: 0; }
+        
+        /* 1. Invert the white theme to make it dark */
+        .swagger-ui { filter: invert(88%) hue-rotate(180deg); }
+        
+        /* 2. Fix images so they don't look like X-rays */
+        .swagger-ui .topbar-wrapper img { filter: invert(100%) hue-rotate(180deg); }
+        
+        /* 3. Hide the default green/black top bar */
+        .swagger-ui .topbar { display: none; }
+
+        /* --- RED BACK BUTTON --- */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            background-color: #dc2626;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: monospace;
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            border: 1px solid #991b1b;
+        }
+        .back-btn:hover { background-color: #b91c1c; }
+    </style>
+</head>
+<body>
+
+    <a href="/" class="back-btn">← RETURN TO MISSION CONTROL</a>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+    
+    <script>
+    window.onload = function() {
+        const ui = SwaggerUIBundle({
+            url: "/api/swagger.json", // Auto-generated JSON from Flask-RestX
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.SwaggerUIStandalonePreset
+            ],
+            layout: "BaseLayout",
+            defaultModelsExpandDepth: -1
+        });
+    };
+    </script>
+</body>
+</html>
