@@ -51,7 +51,7 @@ Since the project is Dockerized, you can spin up the entire stack (Database, Bac
     ```
 
 4.  **Access the App**
-    * **Frontend (App):** [http://localhost](http://localhost)
+    * **Frontend (App):** [http://localhost:5173](http://localhost:5173)
     * **Backend (Developer Gateway):** [http://localhost:5001](http://localhost:5001)
     * **API Docs (Swagger):** [http://localhost:5001/api/docs](http://localhost:5001/api/docs)
 
