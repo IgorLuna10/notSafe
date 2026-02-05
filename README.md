@@ -20,7 +20,7 @@ The project is built as a decoupled **SaaS** application using a modern containe
 * **Infrastructure:** Docker Compose (Nginx as Reverse Proxy)
 
 ---
-
+ 
 ## 🚀 Getting Started
 
 Since the project is Dockerized, you can spin up the entire stack (Database, Backend, Frontend) with one command.
