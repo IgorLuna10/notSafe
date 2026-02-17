@@ -1,0 +1,11 @@
+flask
+flask-restx
+flask-cors
+flask-limiter
+flask-pymongo
+flask-caching
+pymongo
+requests
+python-dotenv
+flask-bcrypt
+pyjwt

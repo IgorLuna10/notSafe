@@ -1,0 +1,45 @@
+services:
+  # --- BACKEND (Python/Flask) ---
+  notsafe-backend:
+    build: ./backend
+    container_name: notsafe-backend
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/notsafe
+      - SECRET_KEY=dev_secret_key
+      - MASTER_API_KEY=notsafe_dev_12345
+      - ADMIN_PASSWORD=admin
+    depends_on:
+      - mongo
+    networks:
+      - notsafe-network
+
+  # --- FRONTEND (React + Nginx) ---
+  notsafe-frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: notsafe-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - notsafe-backend
+    networks:
+      - notsafe-network
+
+  # --- DATABASE ---
+  mongo:
+    image: mongo:latest
+    container_name: notsafe-mongo
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - notsafe-network
+
+networks:
+  notsafe-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
