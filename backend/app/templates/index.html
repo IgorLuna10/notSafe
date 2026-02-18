@@ -8,60 +8,99 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid #334155; }
     </style>
   </head>
   <body class="text-slate-300 min-h-screen flex flex-col items-center justify-center p-6">
     
-    <div class="text-center max-w-4xl">
+    <div class="text-center max-w-4xl w-full">
         
         <h1 class="text-5xl md:text-7xl font-extrabold text-white tracking-tighter mb-4">
             notSafe. <span class="text-red-500">API</span>
         </h1>
         
-        <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-full border border-slate-700 mb-16">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-full border border-slate-700 mb-12">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">System Online</span>
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">System Online v3.0</span>
         </div>
 
-        <h2 class="text-xs font-bold text-slate-600 uppercase tracking-[0.3em] mb-10">Powered By</h2>
-        
-        <div class="flex flex-wrap justify-center gap-16 md:gap-24 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             
-            <div class="flex flex-col items-center gap-4 group">
-                <img src="{{ url_for('static', filename='img/flask.png') }}" 
-                     class="w-14 h-14 object-contain opacity-50 group-hover:opacity-100 transition duration-300 grayscale group-hover:grayscale-0" 
-                     alt="Flask">
-                <span class="text-xs font-bold text-slate-500 group-hover:text-white transition">FLASK</span>
+            <div class="glass p-8 rounded-2xl text-left relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-110 transition">📊</div>
+                <h3 class="text-xl font-bold text-white mb-2">Live Telemetry</h3>
+                <p class="text-sm text-slate-400 mb-6">Ping the NoSQL database to see real-time scan volume.</p>
+                
+                <div id="stats-display" class="hidden mb-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700 font-mono text-xs">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-slate-500">TOTAL SCANS:</span>
+                        <span class="text-emerald-400 font-bold" id="total-val">0</span>
+                    </div>
+                    <div class="flex justify-between mb-1">
+                        <span class="text-slate-500">PASSWORDS:</span>
+                        <span class="text-blue-400 font-bold" id="pass-val">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">EMAILS:</span>
+                        <span class="text-orange-400 font-bold" id="email-val">0</span>
+                    </div>
+                </div>
+
+                <button onclick="fetchStats()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-lg transition flex items-center justify-center gap-2">
+                    <span id="btn-icon">⚡</span> <span id="btn-text">RUN REQUEST</span>
+                </button>
             </div>
 
-            <div class="flex flex-col items-center gap-4 group">
-                <img src="{{ url_for('static', filename='img/react.png') }}" 
-                     class="w-14 h-14 object-contain opacity-50 group-hover:opacity-100 transition duration-300 grayscale group-hover:grayscale-0" 
-                     alt="React">
-                <span class="text-xs font-bold text-slate-500 group-hover:text-white transition">REACT</span>
-            </div>
-
-            <div class="flex flex-col items-center gap-4 group">
-                <img src="{{ url_for('static', filename='img/mongo.png') }}" 
-                     class="w-14 h-14 object-contain opacity-50 group-hover:opacity-100 transition duration-300 grayscale group-hover:grayscale-0" 
-                     alt="MongoDB">
-                <span class="text-xs font-bold text-slate-500 group-hover:text-white transition">MONGODB</span>
-            </div>
-
-            <div class="flex flex-col items-center gap-4 group">
-                <img src="{{ url_for('static', filename='img/python.png') }}" 
-                     class="w-14 h-14 object-contain opacity-50 group-hover:opacity-100 transition duration-300 grayscale group-hover:grayscale-0" 
-                     alt="Python">
-                <span class="text-xs font-bold text-slate-500 group-hover:text-white transition">PYTHON</span>
+            <div class="glass p-8 rounded-2xl text-left relative overflow-hidden group border-blue-500/30">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-110 transition">🚀</div>
+                <h3 class="text-xl font-bold text-white mb-2">Frontend Interface</h3>
+                <p class="text-sm text-slate-400 mb-6">Launch the React Client to interact with the dashboards.</p>
+                
+                <a href="http://localhost:5173" target="_blank" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition flex items-center justify-center gap-2">
+                    OPEN APP →
+                </a>
             </div>
 
         </div>
 
-        <div class="mt-20 text-[10px] text-slate-700 font-mono">
-            API ACCESS RESTRICTED • AUTHORIZED PERSONNEL ONLY
+        <div class="flex justify-center gap-8 opacity-40 grayscale hover:grayscale-0 transition duration-500">
+            <span class="font-bold text-slate-500">FLASK</span>
+            <span class="font-bold text-slate-500">SQLAlchemy</span>
+            <span class="font-bold text-slate-500">MongoDB</span>
+            <span class="font-bold text-slate-500">Docker</span>
         </div>
 
     </div>
 
+    <script>
+        async function fetchStats() {
+            const display = document.getElementById('stats-display');
+            const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
+            
+            // UI Loading State
+            btnText.innerText = "CONNECTING...";
+            btnIcon.classList.add("animate-spin");
+            
+            try {
+                // Fetch from our new Public Controller
+                const res = await fetch('/api/v1/public/stats');
+                const data = await res.json();
+                
+                // Update UI
+                document.getElementById('total-val').innerText = data.total_scans.toLocaleString();
+                document.getElementById('pass-val').innerText = data.password_scans.toLocaleString();
+                document.getElementById('email-val').innerText = data.email_scans.toLocaleString();
+                
+                display.classList.remove('hidden');
+                btnText.innerText = "REFRESH DATA";
+            } catch (err) {
+                alert("API Error: Is the backend running?");
+                btnText.innerText = "RETRY";
+            } finally {
+                btnIcon.classList.remove("animate-spin");
+            }
+        }
+    </script>
   </body>
 </html>

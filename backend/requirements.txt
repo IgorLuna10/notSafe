@@ -3,8 +3,9 @@ flask-restx
 flask-cors
 flask-limiter
 flask-pymongo
+flask-sqlalchemy  <-- NEW
+flask-migrate     <-- NEW
 flask-caching
-pymongo
 requests
 python-dotenv
 flask-bcrypt
