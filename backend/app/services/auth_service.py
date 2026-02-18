@@ -1,5 +1,6 @@
-from app.models.sql_models import User, Company, db
-from app.extensions import bcrypt
+from app.models.user import User
+from app.models.company import Company
+from app.extensions import db, bcrypt
 import jwt
 import os
 import datetime
