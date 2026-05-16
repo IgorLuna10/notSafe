@@ -116,7 +116,7 @@ pytest -v
 
 ## Environment variables
 
-Copy `.env.example` to `.env` and fill in your values. Never commit `.env`.
+Copy `.env` and fill in your values.
 
 ```env
 SECRET_KEY=
