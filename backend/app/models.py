@@ -1,104 +1,135 @@
-from . import mongo
-from datetime import datetime
-from flask_bcrypt import Bcrypt
+from . import mongo, bcrypt
+from datetime import datetime, timedelta
 import uuid
+import jwt
+import os
 
-bcrypt = Bcrypt()
-
-class Analytics:
+class User:
     @staticmethod
-    def get_stats(company_id=None):
-        """
-        Get stats. If company_id is provided, filter by that company.
-        """
-        query = {}
-        if company_id:
-            # We will link checks to companies via 'campaign_id' later
-            # For now, let's keep it simple or filter by a 'company_id' field on checks
-            query['company_id'] = company_id
-
-        total = mongo.db.checks.count_documents(query)
-        breached = mongo.db.checks.count_documents({**query, "is_breached": True})
+    def create(email, password, role='admin', company_id=None):
+        if mongo.db.users.find_one({"email": email}):
+            return None
         
-        return {
-            "total": total,
-            "breached_count": breached,
-            "safe_count": total - breached
-        }
-
-    @staticmethod
-    def log_check(length, is_breached, campaign_id=None, department=None):
-        """
-        Logs a scan. 
-        Crucial: We now accept 'campaign_id' and 'department' to link scans to companies.
-        """
-        mongo.db.checks.insert_one({
-            "length": length,
-            "is_breached": is_breached,
-            "timestamp": datetime.utcnow(),
-            "campaign_id": campaign_id,  # Link to the specific audit drive
-            "department": department     # Link to the specific team (Sales, HR)
+        user_id = str(uuid.uuid4())
+        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+        
+        mongo.db.users.insert_one({
+            "_id": user_id,
+            "email": email,
+            "password": hashed_pw,
+            "role": role,
+            "company_id": company_id,
+            "created_at": datetime.utcnow(),
+            "last_login": None,
+            "is_active": True
         })
+        return user_id
 
     @staticmethod
-    def reset_data(company_id=None):
-        query = {}
-        if company_id:
-            query['company_id'] = company_id
-        mongo.db.checks.delete_many(query)
-
-# --- NEW: SAAS MODELS ---
+    def verify_token(token):
+        try:
+            payload = jwt.decode(token, os.getenv('SECRET_KEY'), algorithms=["HS256"])
+            return payload['user_id']
+        except:
+            return None
 
 class Company:
     @staticmethod
     def create(name, email, password):
-        # 1. Check if email exists
-        if mongo.db.companies.find_one({"email": email}):
-            return None # User exists
-        
-        # 2. Hash Password
-        pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        
-        # 3. Create ID and Insert
         company_id = str(uuid.uuid4())
         mongo.db.companies.insert_one({
             "_id": company_id,
             "name": name,
-            "email": email,
-            "password": pw_hash,
+            "owner_email": email,
             "created_at": datetime.utcnow(),
-            "departments": ["Engineering", "Sales", "Marketing", "HR"] # Default Depts
+            "settings": {"scan_frequency": "daily", "alert_threshold": "high"},
+            "departments": ["Engineering", "Sales", "HR", "Marketing"]
         })
+        User.create(email, password, role='admin', company_id=company_id)
         return company_id
-
-    @staticmethod
-    def verify_user(email, password):
-        user = mongo.db.companies.find_one({"email": email})
-        if user and bcrypt.check_password_hash(user['password'], password):
-            return user
-        return None
 
     @staticmethod
     def get_by_id(company_id):
         return mongo.db.companies.find_one({"_id": company_id})
 
-class Campaign:
-    """
-    An Audit Campaign (e.g., 'Q1 Security Check').
-    Employees belong to a Campaign, not just the company.
-    """
+class Task:
     @staticmethod
-    def create(company_id, name):
-        camp_id = str(uuid.uuid4())
-        mongo.db.campaigns.insert_one({
-            "_id": camp_id,
+    def create(task_type, company_id, total_items=0):
+        task_id = str(uuid.uuid4())
+        mongo.db.tasks.insert_one({
+            "_id": task_id,
             "company_id": company_id,
-            "name": name,
-            "created_at": datetime.utcnow(),
-            "active": True
+            "type": task_type,
+            "status": "pending",
+            "progress": 0,
+            "total": total_items,
+            "created_at": datetime.utcnow()
         })
-        return camp_id
+        return task_id
 
     @staticmethod
-    def get_active(company_id):
-        return mongo.db.campaigns.find_one({"company_id": company_id, "active": True})
+    def complete(task_id):
+        mongo.db.tasks.update_one(
+            {"_id": task_id},
+            {"$set": {"status": "completed", "progress": 100, "completed_at": datetime.utcnow()}}
+        )
+
+class Analytics:
+    @staticmethod
+    def get_stats(company_id=None):
+        if company_id:
+            # Private Company Stats
+            query = {"company_id": company_id}
+            total = mongo.db.employees.count_documents(query)
+            breached = mongo.db.employees.count_documents({**query, "status": "breached"})
+            return {"total": total, "breached_count": breached, "safe_count": total - breached}
+        else:
+            # Public Global Stats (Split by Type)
+            # 1. Passwords
+            pass_total = mongo.db.checks.count_documents({"type": "password"})
+            pass_breached = mongo.db.checks.count_documents({"type": "password", "is_breached": True})
+            
+            # 2. Emails
+            email_total = mongo.db.checks.count_documents({"type": "email"})
+            email_breached = mongo.db.checks.count_documents({"type": "email", "is_breached": True})
+
+            return {
+                "total": pass_total + email_total,
+                "breached_count": pass_breached + email_breached,
+                "passwords": {"total": pass_total, "breached": pass_breached},
+                "emails": {"total": email_total, "breached": email_breached}
+            }
+
+    @staticmethod
+    def log_check(length, is_breached, check_type="password"):
+        """Logs checks. Type can be 'password' or 'email'"""
+        mongo.db.checks.insert_one({
+            "type": check_type,
+            "length": length, # 0 for emails
+            "is_breached": is_breached,
+            "timestamp": datetime.utcnow()
+        })
+
+    @staticmethod
+    def reset_data():
+        mongo.db.checks.delete_many({})
+        mongo.db.employees.delete_many({})
+        mongo.db.companies.delete_many({})
+        mongo.db.users.delete_many({})
+        mongo.db.tasks.delete_many({})
+
+class Employee:
+    @staticmethod
+    def add_bulk(company_id, employees_list):
+        if not employees_list: return 0
+        docs = []
+        for emp in employees_list:
+            docs.append({
+                "_id": str(uuid.uuid4()),
+                "company_id": company_id,
+                "email": emp.get('email'),
+                "status": "pending_scan",
+                "created_at": datetime.utcnow()
+            })
+        result = mongo.db.employees.insert_many(docs)
+        return len(result.inserted_ids)

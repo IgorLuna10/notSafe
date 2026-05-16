@@ -3,9 +3,15 @@ flask-restx
 flask-cors
 flask-limiter
 flask-pymongo
+<<<<<<< HEAD
+=======
+flask-sqlalchemy
+flask-migrate
+>>>>>>> d2768f1 (chore: remove per-folder gitignore and dockerignore, consolidated at root)
 flask-caching
 pymongo
 requests
 python-dotenv
-gunicorn
 flask-bcrypt
+pyjwt
+certifi

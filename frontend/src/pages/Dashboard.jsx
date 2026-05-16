@@ -1,209 +1,214 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  RadialLinearScale,
-  Filler,
-} from 'chart.js';
-import { Line, Bar, Doughnut, Radar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../lib/api';
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale, LinearScale, PointElement, LineElement, BarElement, 
-  Title, Tooltip, Legend, ArcElement, RadialLinearScale, Filler
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [newDept, setNewDept] = useState('');
+  const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
 
-  // --- FETCH DATA ON LOAD ---
-  useEffect(() => {
-    fetch('/api/v1/dashboard/analytics')
-      .then((res) => {
-        if (res.status === 401) window.location.href = '/login'; // Auth Check
-        return res.json();
-      })
-      .then((json) => {
-        setData(json);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) return <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">Loading Mission Control...</div>;
-
-  // --- CALCULATE GRADE ---
-  const ratio = data.stats.total > 0 
-    ? ((1 - (data.stats.breached_count / data.stats.total)) * 100) 
-    : 100;
-  
-  let grade = 'A';
-  let gradeColor = 'text-emerald-400';
-  if (ratio < 60) { grade = 'F'; gradeColor = 'text-red-600'; }
-  else if (ratio < 70) { grade = 'D'; gradeColor = 'text-orange-500'; }
-  else if (ratio < 85) { grade = 'C'; gradeColor = 'text-yellow-500'; }
-  else if (ratio < 95) { grade = 'B'; gradeColor = 'text-blue-400'; }
-
-  // --- HANDLERS ---
-  const handleReset = async () => {
-    const pwd = prompt("WARNING: DELETE ALL DATA?\nType Admin Password:");
-    if (!pwd) return;
-    const res = await fetch('/api/v1/reset-db', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({password: pwd})
-    });
-    if(res.ok) window.location.reload();
-    else alert("Access Denied");
+  const fetchData = async () => {
+    try {
+      const res = await api.get('/dashboard/analytics');
+      setData(res.data);
+    } catch (err) {
+      if (err.response?.status === 401) navigate('/login');
+      else console.error('Dashboard fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => { fetchData(); }, []);
+
+  const addDept = async (e) => {
+    e.preventDefault();
+    const trimmed = newDept.trim();
+    if (!trimmed) return;
+    try {
+      await api.post('/dashboard/company/departments', { name: trimmed });
+      setNewDept('');
+      await fetchData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error adding department');
+    }
+  };
+
+  const deleteDept = async (name) => {
+    if (!confirm(`${t('nav.architecture')} "${name}"?`)) return; // reusing architecture as a dummy confirm text if needed or just use a new key
+    try {
+      await api.delete('/dashboard/company/departments', { data: { name } });
+      await fetchData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error deleting department');
+    }
+  };
+
+  const portalLink = data?.company_id ? `${window.location.origin}/portal/${data.company_id}` : '';
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(portalLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (loading) return (
+    <div className="flex-grow-1 d-flex align-items-center justify-content-center text-info font-monospace">
+      {t('auth.btn_authenticating')}
+    </div>
+  );
+
+  const { total = 0, breached_count = 0 } = data.stats;
+  const ratio = total > 0 ? ((1 - (breached_count / total)) * 100).toFixed(1) : 100;
+
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 p-6 font-mono">
-      <div className="max-w-7xl mx-auto pb-20">
-        
+    <div className="flex-grow-1 p-4 font-monospace">
+      <div className="container-fluid" style={{ maxWidth: '1400px' }}>
+
         {/* HEADER */}
-        <header className="flex justify-between items-center mb-10 border-b border-slate-700 pb-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
-              notSafe. <span className="text-slate-500 text-lg">| MISSION CONTROL</span>
+        <header className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 border-bottom border-secondary pb-4">
+          <div className="mb-3 mb-md-0">
+            <h1 className="h2 fw-bold m-0 text-white">
+              {data.company_name.toUpperCase()} <span className="text-info">{t('dashboard.hq')}</span>
             </h1>
-            <p className="text-xs text-slate-500 mt-1 tracking-widest">REAL-TIME PASSWORD INTELLIGENCE</p>
-          </div>
-          <div className="flex gap-3">
-            <a href="/export-csv" className="flex items-center gap-2 text-emerald-400 hover:text-emerald-200 text-xs font-bold px-4 py-2 border border-emerald-900 rounded bg-emerald-900/20 transition">
-              EXPORT CSV
-            </a>
-            <button onClick={handleReset} className="text-red-400 hover:text-red-200 text-xs font-bold px-4 py-2 border border-red-900 rounded bg-red-900/20 transition">
-              RESET DB
-            </button>
-            <button onClick={() => { fetch('/api/v1/auth/logout', {method:'POST'}).then(()=>window.location.href='/login')}} className="text-slate-400 hover:text-white text-xs font-bold px-4 py-2 border border-slate-700 rounded bg-slate-800 transition">
-              LOGOUT
-            </button>
+            <p className="small text-secondary m-0">{t('dashboard.risk_assessment')}</p>
           </div>
         </header>
 
         {/* METRICS ROW */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card title="TOTAL SCANS" value={data.stats.total} color="text-white" border="border-blue-500" />
-            <Card title="BREACHES" value={data.stats.breached_count} color="text-red-500" border="border-red-500" />
-            <Card title="SAFETY RATIO" value={`${ratio.toFixed(1)}%`} color="text-emerald-400" border="border-emerald-500" />
-            
-            <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-6 rounded-xl border-t-4 border-slate-500 flex justify-between items-center shadow-xl">
-                <div>
-                    <h3 className="text-slate-500 text-[10px] tracking-[0.2em] font-bold">GLOBAL GRADE</h3>
-                    <p className="text-[10px] text-slate-600 mt-1">SYSTEM HEALTH</p>
+        <div className="row g-4 mb-5">
+          <div className="col-md-4">
+            <MetricCard title={t('dashboard.total_checks')} value={total} border="border-info" />
+          </div>
+          <div className="col-md-4">
+            <MetricCard title={t('dashboard.breaches_found')} value={breached_count} color="text-danger" border="border-danger" />
+          </div>
+          <div className="col-md-4">
+            <MetricCard
+              title={t('dashboard.safety_score')}
+              value={ratio + '%'}
+              color={ratio > 80 ? 'text-success' : 'text-warning'}
+              border="border-success"
+            />
+          </div>
+        </div>
+
+        {/* MANAGEMENT ROW */}
+        <div className="row g-4">
+
+          {/* LEFT: CONFIGURATION */}
+          <div className="col-md-5">
+            <div className="card bg-glass border-secondary h-100">
+              <div className="card-header bg-transparent border-secondary fw-bold text-info">
+                {t('features.portal_title').toUpperCase()}
+              </div>
+              <div className="card-body">
+
+                {/* PORTAL LINK */}
+                <div className="p-3 bg-black rounded mb-4 text-center border border-secondary">
+                  <div className="small text-secondary fw-bold mb-2">{t('dashboard.portal_link')}</div>
+                  <code className="d-block p-2 bg-black rounded text-info mb-3 text-break user-select-all">
+                    {portalLink}
+                  </code>
+                  <button
+                    onClick={copyLink}
+                    className={`btn btn-sm fw-bold w-100 ${copied ? 'btn-success' : 'btn-outline-info'}`}
+                  >
+                    {copied ? `✓ ${t('dashboard.copied')}` : `⎘ ${t('dashboard.copy_link')}`}
+                  </button>
                 </div>
-                <div className={`text-5xl font-black ${gradeColor}`}>{grade}</div> 
+
+                <hr className="border-secondary my-4" />
+
+                {/* DEPARTMENTS */}
+                <div className="small text-secondary fw-bold mb-2">{t('dashboard.manage_depts')}</div>
+                <form onSubmit={addDept} className="d-flex gap-2 mb-2">
+                  <input
+                    value={newDept}
+                    onChange={e => setNewDept(e.target.value)}
+                    className="form-control form-control-theme"
+                    placeholder={t('dashboard.add_dept_placeholder')}
+                  />
+                  <button className="btn btn-info fw-bold text-white" disabled={!newDept.trim()}>+</button>
+                </form>
+
+                <div className="d-flex flex-wrap gap-2 mt-3">
+                  {data.departments.length === 0 && (
+                    <div className="text-secondary small">{t('dashboard.no_depts')}</div>
+                  )}
+                  {data.departments.map(dept => (
+                    <span key={dept} className="badge bg-glass border border-secondary p-2 d-flex align-items-center gap-2 text-white">
+                      {dept}
+                      <button
+                        onClick={() => deleteDept(dept)}
+                        className="btn-close ms-1"
+                        style={{ fontSize: '0.5em', filter: 'var(--title-color) === "#ffffff" ? "invert(1)" : "none"' }}
+                      />
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-        </div>
+          </div>
 
-        {/* TREND CHART */}
-        <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-6 rounded-xl mb-8 shadow-xl">
-           <SectionTitle color="bg-indigo-500" title="30-DAY THREAT LANDSCAPE" />
-           <div className="h-64 w-full">
-             <Line options={commonOptions} data={{
-               labels: data.trends.labels,
-               datasets: [
-                 { label: 'Activity', data: data.trends.scans, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.4 },
-                 { label: 'Breaches', data: data.trends.breaches, borderColor: '#ef4444', borderDash: [5,5], tension: 0.4 }
-               ]
-             }} />
-           </div>
-        </div>
-
-        {/* SPLIT ROW: LENGTH & RATIO */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2 bg-slate-800/60 backdrop-blur-md border border-slate-700 p-6 rounded-xl shadow-xl">
-                <SectionTitle color="bg-blue-500" title="PASSWORD LENGTH (REAL DATA)" />
-                <div className="h-64">
-                  <Bar options={commonOptions} data={{
-                    labels: data.lengths.labels,
-                    datasets: [{ label: 'Passwords', data: data.lengths.values, backgroundColor: '#3b82f6', borderRadius: 4 }]
-                  }} />
-                </div>
+          {/* RIGHT: CHART */}
+          <div className="col-md-7">
+            <div className="card bg-glass border-secondary h-100">
+              <div className="card-header bg-transparent border-secondary fw-bold text-white">
+                {t('dashboard.risk_by_dept')}
+              </div>
+              <div className="card-body">
+                {data.department_data && data.department_data.length > 0 ? (
+                  <div style={{ height: '300px' }}>
+                    <Bar
+                      data={{
+                        labels: data.department_data.map(d => d.department),
+                        datasets: [
+                          { label: t('dashboard.total_checks'), data: data.department_data.map(d => d.total), backgroundColor: '#0dcaf0' },
+                          { label: t('dashboard.breaches_found'), data: data.department_data.map(d => d.breached), backgroundColor: '#dc3545' },
+                        ],
+                      }}
+                      options={{
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { grid: { display: false }, ticks: { color: '#aaa' } },
+                          y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#aaa' } },
+                        },
+                        plugins: {
+                          legend: { labels: { color: '#aaa' } },
+                        },
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center text-secondary py-5 d-flex flex-column align-items-center justify-content-center h-100">
+                    <i className="bi bi-bar-chart-fill fs-1 mb-3"></i>
+                    {t('dashboard.no_data')}
+                  </div>
+                )}
+              </div>
             </div>
-            
-            <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-6 rounded-xl flex flex-col shadow-xl">
-                <SectionTitle color="bg-red-500" title="THREAT RATIO" />
-                <div className="h-48 relative flex-grow flex items-center justify-center">
-                  <Doughnut data={{
-                    labels: ['Safe', 'Breached'],
-                    datasets: [{ data: [data.stats.safe_count, data.stats.breached_count], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }]
-                  }} options={{ cutout: '70%', plugins: { legend: { display: false } } }} />
-                </div>
-                <div className="mt-4 text-center text-xs text-slate-500">
-                    <span className="text-emerald-400 font-bold">SAFE</span> vs <span className="text-red-500 font-bold">BREACHED</span>
-                </div>
-            </div>
+          </div>
+
         </div>
-
-        {/* ADVANCED ROW */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <ChartCard title="COMPLEXITY DNA" color="bg-purple-500" subtitle="Character class distribution">
-                <Radar data={{
-                  labels: ['Upper', 'Lower', 'Num', 'Sym'],
-                  datasets: [{ label: 'Usage', data: data.advanced.comp_data, backgroundColor: 'rgba(168, 85, 247, 0.2)', borderColor: '#a855f7' }]
-                }} options={radarOptions} />
-            </ChartCard>
-
-            <ChartCard title="DEPARTMENT RISK" color="bg-orange-500" subtitle="Avg. Security Score per Dept.">
-                 <Bar options={{...commonOptions, indexAxis: 'y', scales: { x: { max: 100, grid: { color: '#334155' } }, y: { grid: { display: false } } }}} data={{
-                    labels: data.advanced.dept_labels,
-                    datasets: [{ label: 'Score', data: data.advanced.dept_scores, backgroundColor: (ctx) => ctx.raw < 60 ? '#ef4444' : ctx.raw < 80 ? '#f59e0b' : '#10b981', borderRadius: 4 }]
-                }} />
-            </ChartCard>
-
-            <ChartCard title="ENTROPY DENSITY" color="bg-teal-500" subtitle="Bit-strength distribution">
-                <Line options={{...commonOptions, scales: { y: { display: false }, x: { grid: { display: false } } }}} data={{
-                  labels: data.advanced.ent_labels,
-                  datasets: [{ label: 'Distribution', data: data.advanced.ent_values, borderColor: '#14b8a6', backgroundColor: 'rgba(20, 184, 166, 0.2)', fill: true, tension: 0.4 }]
-                }} />
-            </ChartCard>
-        </div>
-
       </div>
     </div>
   );
 }
 
-// --- SUB-COMPONENTS & CONFIG ---
-
-const Card = ({ title, value, color, border }) => (
-  <div className={`bg-slate-800/60 backdrop-blur-md border border-slate-700 p-6 rounded-xl border-t-4 ${border} shadow-xl`}>
-    <h3 className="text-slate-500 text-[10px] tracking-[0.2em] font-bold">{title}</h3>
-    <p className={`text-4xl font-bold mt-2 ${color}`}>{value}</p>
+const MetricCard = ({ title, value, color = 'text-white', border }) => (
+  <div className={`card bg-glass border-secondary h-100 border-start border-4 ${border.replace('border-', 'border-start-')}`}>
+    <div className="card-body p-4">
+      <h6 className="text-secondary small fw-bold text-uppercase" style={{ letterSpacing: '2px' }}>{title}</h6>
+      <div className={`display-5 fw-bold mt-2 ${color}`}>{value}</div>
+    </div>
   </div>
 );
-
-const ChartCard = ({ title, color, children, subtitle }) => (
-  <div className="bg-slate-800/60 backdrop-blur-md border border-slate-700 p-6 rounded-xl shadow-xl">
-    <SectionTitle color={color} title={title} />
-    <div className="h-56">{children}</div>
-    <p className="text-[10px] text-slate-500 text-center mt-2">{subtitle}</p>
-  </div>
-);
-
-const SectionTitle = ({ color, title }) => (
-  <h3 className="text-slate-300 text-sm font-bold mb-4 flex items-center gap-2">
-    <span className={`w-2 h-2 ${color} rounded-full`}></span> {title}
-  </h3>
-);
-
-const commonOptions = {
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false } },
-  scales: { y: { grid: { color: '#334155' } }, x: { grid: { display: false } } }
-};
-
-const radarOptions = {
-  maintainAspectRatio: false,
-  scales: { r: { angleLines: { color: '#334155' }, grid: { color: '#334155' }, pointLabels: { color: '#94a3b8' }, ticks: { display: false } } }
-};

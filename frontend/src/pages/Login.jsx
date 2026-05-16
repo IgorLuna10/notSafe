@@ -1,68 +1,110 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../lib/api';
 
 export default function Login() {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      const res = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      // Successful Login
-      navigate('/dashboard'); 
+      const res = await api.post('/auth/login', formData);
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('role', res.data.role);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError(err.response?.data?.error || 'Connection failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
-      <div className="bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-2xl w-full max-w-sm">
-        <h1 className="text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
-          notSafe.
-        </h1>
-        <p className="text-slate-500 text-xs text-center mb-6 tracking-widest uppercase">Mission Control Access</p>
+    <div className="flex-grow-1 d-flex align-items-center justify-content-center p-4">
+      <div className="row w-100 justify-content-center">
+        <div className="col-12 col-md-6 col-lg-4">
+          
+          <div className="card bg-glass text-white shadow-lg">
+            <div className="card-body p-5">
+              
+              {/* Header */}
+              <div className="text-center mb-4">
+                <h1 className="fw-bold text-uppercase text-white" style={{ letterSpacing: '2px' }}>{t('auth.restricted')}</h1>
+                <p className="text-danger small fw-bold tracking-wide">{t('auth.authorized_only')}</p>
+              </div>
 
-        {error && (
-          <div className="bg-red-900/20 border border-red-500/50 text-red-200 text-xs p-3 rounded mb-4 text-center">
-            {error}
-          </div>
-        )}
+              {/* Form */}
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label small text-secondary fw-bold">{t('auth.email_label')}</label>
+                  <input 
+                    type="email" 
+                    className="form-control form-control-theme"
+                    placeholder="admin@corp.com"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  />
+                </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-slate-400 text-xs font-bold uppercase">Email</label>
-            <input 
-              type="email" 
-              className="w-full mt-1 bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-            />
+                <div className="mb-4">
+                  <label className="form-label small text-secondary fw-bold">{t('auth.password_label')}</label>
+                  <input 
+                    type="password" 
+                    className="form-control form-control-theme"
+                    placeholder="••••••••"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  />
+                </div>
+
+                {error && (
+                  <div className="alert alert-danger py-2 text-center small" role="alert">
+                    ⚠️ {error}
+                  </div>
+                )}
+
+                <button 
+                  type="submit" 
+                  className="btn btn-danger w-100 py-2 fw-bold shadow" 
+                  disabled={loading}
+                >
+                  {loading ? t('auth.btn_authenticating') : t('auth.btn_login')}
+                </button>
+              </form>
+
+              {/* Navigation Links */}
+              <div className="mt-4 text-center small d-flex flex-column gap-3">
+                
+                {/* Primary Nav */}
+                <div className="d-flex justify-content-center gap-4">
+                  <Link to="/" className="text-decoration-none text-secondary hover-text-white transition">{t('auth.terminate')}</Link>
+                  <Link to="/register" className="text-decoration-none text-info fw-bold hover-text-white transition">{t('auth.register_new')}</Link>
+                </div>
+                
+                {/* Recovery */}
+                <div className="pt-3 border-top border-secondary d-flex flex-column gap-2">
+                  <Link to="/forgot-password" className="text-decoration-none text-warning fw-bold hover-text-white transition">
+                    <i className="bi bi-key me-1"></i> {t('auth.forgot_password')}
+                  </Link>
+                  
+                </div>
+
+              </div>
+
+            </div>
           </div>
-          <div>
-            <label className="text-slate-400 text-xs font-bold uppercase">Password</label>
-            <input 
-              type="password" 
-              className="w-full mt-1 bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
-          </div>
-          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded shadow-lg transition">
-            ENTER
-          </button>
-        </form>
-        
-        <div className="mt-6 text-center">
-             <a href="/register" className="text-xs text-slate-500 hover:text-blue-400 transition">Create Company Account</a>
+
         </div>
       </div>
     </div>

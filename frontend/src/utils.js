@@ -31,37 +31,37 @@ function formatTime(seconds, entropy) {
 
   if (seconds < 1e-6) {
     timeString = "Instantly";
-    color = "text-red-600";
+    color = "text-danger"; // Bootstrap Red
     label = "Critical";
     score = 0;
   } else if (seconds < 60) {
     timeString = "Seconds";
-    color = "text-red-500";
+    color = "text-danger"; 
     label = "Very Weak";
     score = 1;
   } else if (seconds < 3600) {
     timeString = `${Math.round(seconds / 60)} Minutes`;
-    color = "text-orange-500";
+    color = "text-warning"; // Bootstrap Yellow/Orange
     label = "Weak";
     score = 2;
   } else if (seconds < 86400) {
     timeString = `${Math.round(seconds / 3600)} Hours`;
-    color = "text-yellow-500";
+    color = "text-warning";
     label = "Moderate";
     score = 3;
   } else if (seconds < 31536000) {
     timeString = `${Math.round(seconds / 86400)} Days`;
-    color = "text-yellow-400";
+    color = "text-info"; // Bootstrap Cyan/Blue
     label = "Strong";
     score = 4;
   } else if (seconds < 3153600000) {
     timeString = `${Math.round(seconds / 31536000)} Years`;
-    color = "text-green-400";
+    color = "text-success"; // Bootstrap Green
     label = "Very Strong";
     score = 5;
   } else {
     timeString = "Centuries";
-    color = "text-emerald-400";
+    color = "text-success";
     label = "Unbreakable";
     score = 6;
   }

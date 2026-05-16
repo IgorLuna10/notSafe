@@ -1,69 +1,81 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function Home() {
+  const { t } = useTranslation();
+
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-300 flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
-      
+    <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-center p-4 position-relative overflow-hidden font-sans">
+
       {/* Background Effects */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
-          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600/10 rounded-full blur-[128px]"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-red-600/10 rounded-full blur-[128px]"></div>
+      <div className="position-absolute top-0 start-0 w-100 h-100 overflow-hidden" style={{ zIndex: -1 }}>
+          <div className="position-absolute top-0 start-0 bg-primary opacity-25 rounded-circle blur-effect" style={{ width: '400px', height: '400px', filter: 'blur(100px)', transform: 'translate(-20%, -20%)' }}></div>
+          <div className="position-absolute bottom-0 end-0 bg-danger opacity-25 rounded-circle blur-effect" style={{ width: '400px', height: '400px', filter: 'blur(100px)', transform: 'translate(20%, 20%)' }}></div>
       </div>
 
-      {/* NAVBAR */}
-      <nav className="absolute top-0 w-full p-6 flex justify-between items-center max-w-7xl z-50">
-        <div className="font-bold text-2xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-          notSafe.
-        </div>
-        <div className="flex gap-6 items-center">
-            <Link to="/login" className="text-sm font-semibold text-slate-400 hover:text-white transition">
-                Sign In
-            </Link>
-            <Link to="/register" className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-full shadow-lg shadow-blue-900/20 transition">
-                Get Started
-            </Link>
-        </div>
-      </nav>
-
       {/* HERO CONTENT */}
-      <div className="max-w-4xl text-center space-y-8 z-10 mt-10">
-        <div className="inline-block px-3 py-1 text-xs font-mono text-emerald-400 bg-emerald-900/30 border border-emerald-800 rounded-full">
-          ENTERPRISE SECURITY SUITE v1.0
+      <div className="container text-center mt-5" style={{ zIndex: 5 }}>
+        <div className="d-inline-block px-3 py-1 mb-4 small fw-bold font-monospace text-success border border-success bg-opacity-10 bg-success rounded-pill">
+          {t('hero.badge')}
         </div>
 
-        <h1 className="text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight">
-          Secure your workforce <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-            before the breach.
+        <h1 className="display-3 fw-bolder text-white mb-4">
+          {t('hero.title_part1')} <br />
+          <span className="text-gradient">
+            {t('hero.title_part2')}
           </span>
         </h1>
-        
-        <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          The all-in-one Mission Control for password auditing, entropy analysis, and breach monitoring. 
-          Protect your company with real-time intelligence.
+
+        <p className="lead text-secondary mx-auto mb-5" style={{ maxWidth: '600px' }}>
+          {t('hero.subtitle')}
         </p>
 
-        {/* FEATURE CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto mt-12">
-            
-            {/* Card 1: Public Auditor */}
-            <Link to="/audit" className="group relative p-8 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-blue-500 rounded-2xl transition-all duration-300 text-left cursor-pointer">
-                <div className="w-12 h-12 bg-blue-900/30 rounded-lg flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition">
-                    🔑
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition">Password Auditor</h3>
-                <p className="text-sm text-slate-400">Analyze password complexity and check against 800M+ leaked credentials.</p>
+        {/* BUTTONS */}
+        <div className="d-flex justify-content-center gap-3 mb-5">
+            <Link to="/register" className="btn btn-primary btn-lg fw-bold rounded-pill px-4">
+                {t('hero.btn_register')}
             </Link>
+            <Link to="/global" className="btn btn-outline-secondary btn-lg fw-bold rounded-pill px-4">
+                {t('hero.btn_global')}
+            </Link>
+        </div>
 
-            {/* Card 2: Company Dashboard */}
-            <Link to="/login" className="group relative p-8 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500 rounded-2xl transition-all duration-300 text-left">
-                <div className="w-12 h-12 bg-emerald-900/30 rounded-lg flex items-center justify-center mb-4 text-2xl group-hover:scale-110 transition">
-                    🛡️
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-emerald-400 transition">Company Portal</h3>
-                <p className="text-sm text-slate-400">Login to Mission Control to manage campaigns and view department risk scores.</p>
-            </Link>
+        {/* FEATURE CARDS */}
+        <div className="row g-4 justify-content-center text-start">
+
+            {/* Card 1: Password */}
+            <div className="col-md-4">
+              <Link to="/audit" className="card bg-glass h-100 text-decoration-none border-secondary hover-shadow transition">
+                  <div className="card-body p-4">
+                    <div className="mb-3 fs-1">🔑</div>
+                    <h3 className="h5 fw-bold text-white mb-2">{t('features.auditor_title')}</h3>
+                    <p className="small text-secondary m-0">{t('features.auditor_desc')}</p>
+                  </div>
+              </Link>
+            </div>
+
+            {/* Card 2: Email */}
+            <div className="col-md-4">
+              <Link to="/email-monitor" className="card bg-glass h-100 text-decoration-none border-secondary hover-shadow transition">
+                  <div className="card-body p-4">
+                    <div className="mb-3 fs-1">📧</div>
+                    <h3 className="h5 fw-bold text-white mb-2">{t('features.monitor_title')}</h3>
+                    <p className="small text-secondary m-0">{t('features.monitor_desc')}</p>
+                  </div>
+              </Link>
+            </div>
+
+            {/* Card 3: Dashboard */}
+            <div className="col-md-4">
+              <Link to="/login" className="card bg-glass h-100 text-decoration-none border-secondary hover-shadow transition">
+                  <div className="card-body p-4">
+                    <div className="mb-3 fs-1">🛡️</div>
+                    <h3 className="h5 fw-bold text-white mb-2">{t('features.portal_title')}</h3>
+                    <p className="small text-secondary m-0">{t('features.portal_desc')}</p>
+                  </div>
+              </Link>
+            </div>
 
         </div>
       </div>

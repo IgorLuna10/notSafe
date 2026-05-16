@@ -1,89 +1,78 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../lib/api';
 
 export default function Register() {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      // Connect to your Flask Backend
-      const res = await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+    setError('');
+    setLoading(true);
 
-      alert("Registration Successful! Please Login.");
-      // Navigate to Login Page here (e.g., using React Router)
-      
+    try {
+      await api.post('/auth/register', formData);
+      navigate('/login');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.error || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
-      <div className="bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-2xl w-full max-w-md">
-        
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-            notSafe.
-          </h1>
-          <p className="text-slate-400 text-sm mt-2">Enterprise Security Registration</p>
+    <div className="flex-grow-1 d-flex align-items-center justify-content-center p-4">
+      <div className="row w-100 justify-content-center">
+        <div className="col-12 col-md-6 col-lg-4">
+          
+          <div className="card bg-glass text-white shadow-lg">
+            <div className="card-body p-5">
+              
+              <div className="text-center mb-4">
+                <h1 className="fw-bold text-uppercase text-white" style={{ letterSpacing: '2px' }}>{t('auth.register_title')}</h1>
+                <p className="text-info small fw-bold tracking-wide">{t('auth.register_subtitle')}</p>
+              </div>
+
+              {error && <div className="alert alert-danger py-2 text-center small">{error}</div>}
+
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label small text-secondary fw-bold">{t('auth.company_label')}</label>
+                  <input type="text" required className="form-control form-control-theme" placeholder="Acme Corp"
+                    value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label small text-secondary fw-bold">{t('auth.email_label')}</label>
+                  <input type="email" required className="form-control form-control-theme" placeholder="admin@company.com"
+                    value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label small text-secondary fw-bold">{t('auth.password_label')}</label>
+                  <input type="password" required className="form-control form-control-theme" placeholder="••••••••"
+                    value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} />
+                </div>
+
+                <button type="submit" disabled={loading} className="btn btn-info w-100 py-2 fw-bold text-white shadow">
+                  {loading ? t('auth.btn_initializing') : t('auth.btn_register')}
+                </button>
+              </form>
+              
+              <div className="mt-4 text-center">
+                <Link to="/login" className="text-decoration-none text-secondary small hover-text-white transition">
+                  {t('auth.back_to_login')}
+                </Link>
+              </div>
+
+            </div>
+          </div>
         </div>
-
-        {error && (
-          <div className="bg-red-900/30 border border-red-500 text-red-200 text-sm p-3 rounded mb-4">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-slate-400 text-xs font-bold mb-2 uppercase tracking-wide">Company Name</label>
-            <input 
-              type="text" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition"
-              placeholder="Acme Corp"
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-400 text-xs font-bold mb-2 uppercase tracking-wide">Work Email</label>
-            <input 
-              type="email" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition"
-              placeholder="admin@company.com"
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-400 text-xs font-bold mb-2 uppercase tracking-wide">Password</label>
-            <input 
-              type="password" 
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 transition"
-              placeholder="••••••••"
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg hover:shadow-blue-500/20 transition duration-300"
-          >
-            CREATE ACCOUNT
-          </button>
-        </form>
-        
-        <p className="text-center text-slate-500 text-sm mt-6">
-          Already have an account? <a href="/login" className="text-blue-400 hover:text-blue-300 font-bold">Sign In</a>
-        </p>
       </div>
     </div>
   );
