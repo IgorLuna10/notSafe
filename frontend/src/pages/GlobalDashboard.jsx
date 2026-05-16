@@ -4,10 +4,12 @@ import {
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2'; 
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement, Filler);
 
 export default function GlobalDashboard() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,7 +20,7 @@ export default function GlobalDashboard() {
       .catch(e => setLoading(false));
   }, []);
 
-  if (loading || !data || !data.stats) return <div className="min-vh-100 bg-dark d-flex align-items-center justify-content-center text-info font-monospace">ESTABLISHING UPLINK...</div>;
+  if (loading || !data || !data.stats) return <div className="min-vh-100 d-flex align-items-center justify-content-center text-info font-monospace">{t('auth.btn_authenticating')}</div>;
 
   const passwords = data.stats.passwords || { total: 0, breached: 0 };
   const emails = data.stats.emails || { total: 0, breached: 0 };
@@ -34,56 +36,56 @@ export default function GlobalDashboard() {
   else if (safe_ratio < 97) { grade = 'B'; gradeColor = 'text-info'; }
 
   return (
-    <div className="min-vh-100 bg-dark text-light p-4 font-monospace">
+    <div className="min-vh-100 p-4 font-monospace">
       <div className="container-fluid" style={{ maxWidth: '1400px' }}>
         
         {/* HEADER */}
         <header className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
           <div>
-            <h1 className="h2 fw-bold m-0">GLOBAL <span className="text-info">INTELLIGENCE</span></h1>
-            <div className="small text-secondary font-monospace" style={{ letterSpacing: '2px' }}>LIVE THREAT TELEMETRY</div>
+            <h1 className="h2 fw-bold m-0 text-white">{t('dashboard.global_intel').split(' ')[0]} <span className="text-info">{t('dashboard.global_intel').split(' ')[1]}</span></h1>
+            <div className="small text-secondary font-monospace" style={{ letterSpacing: '2px' }}>{t('dashboard.telemetry')}</div>
           </div>
           <Link to="/" className="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-4">
-            EXIT DASHBOARD
+            {t('dashboard.exit')}
           </Link>
         </header>
 
         <div className="row g-4">
 
-            {/* 1. BIG SCORE CARD (Left Column) */}
+            {/* 1. BIG SCORE CARD */}
             <div className="col-lg-3 col-md-4">
                 <div className="card bg-glass border-secondary h-100 text-center position-relative overflow-hidden">
                     <div className="position-absolute top-0 start-0 w-100" style={{ height: '4px', background: 'linear-gradient(90deg, #0dcaf0, #6610f2)' }}></div>
                     <div className="card-body d-flex flex-column justify-content-center align-items-center">
                         <div className={`display-1 fw-bold ${gradeColor}`}>{grade}</div>
-                        <div className="small text-secondary fw-bold text-uppercase mt-2">Global Safety Score</div>
+                        <div className="small text-secondary fw-bold text-uppercase mt-2">{t('dashboard.global_score')}</div>
                     </div>
                 </div>
             </div>
 
-            {/* 2. SUMMARY METRICS (Right Column) */}
+            {/* 2. SUMMARY METRICS */}
             <div className="col-lg-9 col-md-8">
                 <div className="row g-4">
                     <div className="col-md-4">
-                        <MetricBox label="TOTAL SCANS" value={total} sub="Combined Traffic" />
+                        <MetricBox label={t('dashboard.total_scans')} value={total} sub="Combined Traffic" />
                     </div>
                     <div className="col-md-4">
-                        <MetricBox label="THREATS DETECTED" value={breached_count} color="text-danger" sub="Compromised Assets" />
+                        <MetricBox label={t('dashboard.threats_detected')} value={breached_count} color="text-danger" sub="Compromised Assets" />
                     </div>
                     <div className="col-md-4">
-                        <MetricBox label="PASSWORDS AUDITED" value={passwords.total} color="text-info" sub="SHA-1 Checks" />
+                        <MetricBox label={t('dashboard.passwords_audited')} value={passwords.total} color="text-info" sub="SHA-1 Checks" />
                     </div>
                 </div>
             </div>
 
-            {/* 3. MAIN MULTI-LINE CHART (Middle) */}
+            {/* 3. ACTIVITY CHART */}
             <div className="col-lg-8">
                 <div className="card bg-glass border-secondary shadow-lg">
                     <div className="card-body p-4">
                         <div className="d-flex justify-content-between align-items-center mb-4">
-                            <h5 className="card-title fw-bold m-0 d-flex align-items-center gap-2">
+                            <h5 className="card-title fw-bold m-0 d-flex align-items-center gap-2 text-white">
                                 <span className="d-inline-block rounded-circle bg-info" style={{ width: '8px', height: '8px' }}></span> 
-                                30-DAY ACTIVITY
+                                {t('dashboard.activity_30d')}
                             </h5>
                             <div className="small fw-bold">
                                 <span className="text-info me-3">● PASSWORDS</span>
@@ -92,7 +94,7 @@ export default function GlobalDashboard() {
                         </div>
                         <div style={{ height: '300px' }}>
                             <Line 
-                                options={{ maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#343a40' } } } }}
+                                options={{ maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(255,255,255,0.05)' } } } }}
                                 data={{
                                     labels: data.trends.labels,
                                     datasets: [
@@ -106,18 +108,18 @@ export default function GlobalDashboard() {
                 </div>
             </div>
 
-            {/* 4. EMAIL DOUGHNUT CHART (Side Right) */}
+            {/* 4. RISK RATIO */}
             <div className="col-lg-4">
                 <div className="card bg-glass border-secondary h-100">
                     <div className="card-body d-flex flex-column align-items-center justify-content-center p-4">
-                        <h6 className="text-secondary fw-bold small text-uppercase mb-4">EMAIL RISK RATIO</h6>
+                        <h6 className="text-secondary fw-bold small text-uppercase mb-4">{t('dashboard.risk_ratio')}</h6>
                         <div style={{ width: '150px', height: '150px', position: 'relative' }}>
                             <Doughnut data={{
                                 labels: ['Safe', 'Breached'],
                                 datasets: [{ data: [emails.total - emails.breached, emails.breached], backgroundColor: ['#198754', '#dc3545'], borderWidth: 0 }]
                             }} options={{ cutout: '75%', plugins: { legend: { display: false } } }} />
                             
-                            <div className="position-absolute top-50 start-50 translate-middle h4 fw-bold text-light m-0">
+                            <div className="position-absolute top-50 start-50 translate-middle h4 fw-bold text-white m-0">
                                 {emails.total > 0 ? ((emails.breached/emails.total)*100).toFixed(0) : 0}%
                             </div>
                         </div>
@@ -128,11 +130,11 @@ export default function GlobalDashboard() {
                 </div>
             </div>
 
-            {/* 5. PASSWORD BAR CHART (Bottom) */}
+            {/* 5. COMPLEXITY CHART */}
             <div className="col-12">
                 <div className="card bg-glass border-secondary">
                     <div className="card-body p-4">
-                        <h6 className="card-title fw-bold text-light mb-4">PASSWORD COMPLEXITY DISTRIBUTION</h6>
+                        <h6 className="card-title fw-bold text-white mb-4">{t('dashboard.complexity')}</h6>
                         <div style={{ height: '200px' }}>
                             <Bar 
                                 options={{ maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { display: false } } }} 
@@ -152,7 +154,7 @@ export default function GlobalDashboard() {
   );
 }
 
-const MetricBox = ({ label, value, sub, color="text-light" }) => (
+const MetricBox = ({ label, value, sub, color="text-white" }) => (
     <div className="card bg-glass border-secondary h-100">
         <div className="card-body p-3">
             <div className="small text-secondary fw-bold text-uppercase">{label}</div>

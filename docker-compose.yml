@@ -1,45 +1,68 @@
 services:
-  # --- BACKEND (Python/Flask) ---
-  notsafe-backend:
-    build: ./backend
-    container_name: notsafe-backend
-    ports:
-      - "5001:5001"
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/notsafe
-      - SECRET_KEY=dev_secret_key
-      - MASTER_API_KEY=notsafe_dev_12345
-      - ADMIN_PASSWORD=admin
-    depends_on:
-      - mongo
-    networks:
-      - notsafe-network
 
-  # --- FRONTEND (React + Nginx) ---
-  notsafe-frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: notsafe-frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - notsafe-backend
-    networks:
-      - notsafe-network
-
-  # --- DATABASE ---
+  # ── MongoDB — NoSQL Analytics Database ───────────────────────────────────
   mongo:
     image: mongo:latest
     container_name: notsafe-mongo
+    restart: unless-stopped
+    ports:
+      - "${PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_DATABASE: notsafe_db
     volumes:
-      - mongo-data:/data/db
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - notsafe-network
+
+  # ── Backend — Python / Flask API ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: notsafe-backend
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env                          # single root .env — all vars injected here
+    environment:
+      # Override MONGO_URI to use the Docker service name, not localhost
+      - MONGO_URI=mongodb://mongo:27017/notsafe_db
+      - FLASK_APP=run.py
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./backend/app:/app/app        # hot-reload in development
+    networks:
+      - notsafe-network
+
+  # ── Frontend — React + Nginx ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: notsafe-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    env_file:
+      - .env                          # VITE_* vars picked up at build time
+    depends_on:
+      - backend
+    networks:
+      - notsafe-network
+
+volumes:
+  mongo_data:
+    driver: local
 
 networks:
   notsafe-network:
     driver: bridge
-
-volumes:
-  mongo-data:

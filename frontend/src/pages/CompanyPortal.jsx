@@ -1,28 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { usePasswordHasher } from '../hooks/usePasswordHasher';
 
 export default function CompanyPortal() {
-  const { companyId } = useParams(); // URL: /portal/:companyId
+  const { t } = useTranslation();
+  const { companyId } = useParams(); 
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Form State
   const [selectedDept, setSelectedDept] = useState('');
   const [password, setPassword] = useState('');
   const [result, setResult] = useState(null);
   
   const { hashPassword, isLoading } = usePasswordHasher();
 
-  // 1. Fetch Company Info (Name + Departments)
   useEffect(() => {
     const fetchInfo = async () => {
       try {
         const res = await axios.get(`/api/v1/public/company/${companyId}`);
         setCompany(res.data);
-        // Default to first department if available
         if (res.data.departments?.length > 0) {
             setSelectedDept(res.data.departments[0]);
         }
@@ -35,7 +34,6 @@ export default function CompanyPortal() {
     fetchInfo();
   }, [companyId]);
 
-  // 2. Handle the Check
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!password || !selectedDept) return;
@@ -44,13 +42,11 @@ export default function CompanyPortal() {
     if (!hashData) return;
 
     try {
-      // Check Breach Status
       const res = await axios.get(`/api/v1/check-prefix/${hashData.prefix}`);
       const isBreached = !!res.data.suffixes.find(l => l.startsWith(hashData.suffix));
       
       setResult(isBreached ? 'breached' : 'safe');
 
-      // Log to Backend (Anonymous)
       await axios.post('/api/v1/log-dept-check', {
         company_id: companyId,
         department: selectedDept,
@@ -63,24 +59,24 @@ export default function CompanyPortal() {
     }
   };
 
-  if (loading) return <div className="min-vh-100 bg-dark d-flex align-items-center justify-content-center text-info font-monospace">LOADING PORTAL...</div>;
+  if (loading) return <div className="min-vh-100 d-flex align-items-center justify-content-center text-info font-monospace">{t('tools.portal_loading')}</div>;
   
   if (error) return (
-      <div className="min-vh-100 bg-dark d-flex align-items-center justify-content-center text-light">
+      <div className="min-vh-100 d-flex align-items-center justify-content-center text-white">
           <div className="text-center">
               <h1 className="display-1 text-danger fw-bold">404</h1>
               <p className="lead text-secondary">{error}</p>
-              <Link to="/" className="btn btn-outline-light mt-3">Return Home</Link>
+              <Link to="/" className="btn btn-outline-info mt-3">{t('auth.back_to_login')}</Link>
           </div>
       </div>
   );
 
   return (
-    <div className="min-vh-100 bg-dark text-light d-flex align-items-center justify-content-center p-4">
+    <div className="min-vh-100 d-flex align-items-center justify-content-center p-4 position-relative">
       
       {/* Background Ambience */}
       <div className="position-absolute top-0 start-0 w-100 h-100 overflow-hidden" style={{ zIndex: 0 }}>
-          <div className="position-absolute top-50 start-50 bg-primary opacity-10 rounded-circle" style={{ width: '800px', height: '800px', filter: 'blur(150px)', transform: 'translate(-50%, -50%)' }}></div>
+          <div className="position-absolute top-50 start-50 bg-primary opacity-10 rounded-circle blur-effect" style={{ width: '800px', height: '800px', transform: 'translate(-50%, -50%)' }}></div>
       </div>
 
       <div className="card bg-glass border-secondary shadow-lg w-100 position-relative" style={{ maxWidth: '550px', zIndex: 10 }}>
@@ -101,13 +97,13 @@ export default function CompanyPortal() {
                 
                 {/* 1. Department Selector */}
                 <div className="mb-4">
-                    <label className="form-label small text-secondary fw-bold">SELECT YOUR DEPARTMENT</label>
+                    <label className="form-label small text-secondary fw-bold">{t('tools.portal_select_dept')}</label>
                     <select 
-                        className="form-select bg-dark text-light border-secondary p-3"
+                        className="form-select form-control-theme p-3"
                         value={selectedDept}
                         onChange={(e) => setSelectedDept(e.target.value)}
                     >
-                        {company.departments.length === 0 && <option>No Departments Configured</option>}
+                        {company.departments.length === 0 && <option>{t('dashboard.no_depts')}</option>}
                         {company.departments.map(dept => (
                             <option key={dept} value={dept}>{dept}</option>
                         ))}
@@ -116,22 +112,22 @@ export default function CompanyPortal() {
 
                 {/* 2. Password Input */}
                 <div className="mb-4">
-                    <label className="form-label small text-secondary fw-bold">VERIFY CREDENTIAL STRENGTH</label>
+                    <label className="form-label small text-secondary fw-bold">{t('tools.portal_verify')}</label>
                     <input 
                         type="password" 
-                        className="form-control bg-dark text-light border-secondary p-3 text-center font-monospace" 
-                        placeholder="Enter password to test..."
+                        className="form-control form-control-theme p-3 text-center font-monospace" 
+                        placeholder={t('tools.portal_verify_placeholder')}
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                     />
                     <div className="form-text text-secondary small mt-2 text-center">
                         <i className="bi bi-shield-lock-fill me-1"></i> 
-                        Zero-Knowledge Protocol: We only see the Department and Result.
+                        {t('tools.portal_verify_desc')}
                     </div>
                 </div>
 
                 <button disabled={isLoading || !selectedDept} className="btn btn-primary w-100 py-3 fw-bold shadow">
-                    {isLoading ? 'ANALYZING HASH...' : 'RUN SECURITY CHECK'}
+                    {isLoading ? t('auth.btn_authenticating') : t('tools.monitor_btn')}
                 </button>
             </form>
 
@@ -143,19 +139,19 @@ export default function CompanyPortal() {
                     </div>
                     <div>
                         <h5 className="alert-heading fw-bold m-0">
-                            {result === 'breached' ? 'Credential Compromised' : 'Credential Secure'}
+                            {result === 'breached' ? t('audit_breached', 'Compromised') : t('audit_safe', 'Secure')}
                         </h5>
                         <p className="m-0 small opacity-75">
                              {result === 'breached' 
-                                ? "This password appears in known data breaches. Please rotate immediately." 
-                                : "No match found in our dark web database."}
+                                ? t('tools.audit_breached') 
+                                : t('tools.audit_safe')}
                         </p>
                     </div>
                 </div>
             )}
             
             <div className="mt-5 pt-4 border-top border-secondary text-center">
-                <Link to="/" className="text-decoration-none text-secondary small hover-text-white">
+                <Link to="/" className="text-decoration-none text-secondary small hover-text-white transition">
                     Powered by notSafe. Enterprise
                 </Link>
             </div>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 
 export default function EmailChecker() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -26,11 +28,11 @@ export default function EmailChecker() {
   };
 
   return (
-    <div className="min-vh-100 bg-dark text-light font-monospace p-4 d-flex flex-column align-items-center">
+    <div className="flex-grow-1 font-monospace p-4 d-flex flex-column align-items-center">
       <div className="container mt-5" style={{ maxWidth: '800px' }}>
         
-        <Link to="/" className="text-secondary text-decoration-none fw-bold small mb-5 d-block hover-text-white">
-          ← ABORT MISSION
+        <Link to="/" className="text-secondary text-decoration-none fw-bold small mb-5 d-block hover-text-white transition">
+          ← {t('auth.terminate')}
         </Link>
 
         <div className="text-center mb-5">
@@ -41,19 +43,18 @@ export default function EmailChecker() {
             EMAIL <span className="text-warning">INTELLIGENCE</span>
           </h1>
           <p className="lead text-secondary mt-3 mx-auto" style={{ maxWidth: '600px' }}>
-            Scan corporate domains against 500+ dark web dumps. 
-            Identify compromised executive accounts instantly.
+            {t('tools.monitor_subtitle')}
           </p>
         </div>
 
-        {/* SEARCH BAR (Bootstrap Input Group) */}
+        {/* SEARCH BAR */}
         <div className="card bg-glass border-secondary shadow-lg mb-4">
             <div className="card-body p-2">
                 <div className="input-group input-group-lg">
                     <input 
                         type="email" 
-                        className="form-control bg-transparent text-light border-0 shadow-none" 
-                        placeholder="target@company.com" 
+                        className="form-control bg-transparent text-white border-0 shadow-none" 
+                        placeholder={t('tools.monitor_placeholder')} 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
@@ -62,7 +63,7 @@ export default function EmailChecker() {
                         disabled={loading || !email}
                         className="btn btn-warning fw-bold px-4"
                     >
-                        {loading ? 'SCANNING...' : 'RUN DIAGNOSTIC'}
+                        {loading ? t('auth.btn_authenticating') : t('tools.monitor_btn')}
                     </button>
                 </div>
             </div>
@@ -81,13 +82,13 @@ export default function EmailChecker() {
                 <div className={`card-header p-4 ${result.status === 'breached' ? 'bg-danger bg-opacity-10' : 'bg-success bg-opacity-10'}`}>
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
-                            <div className="small text-secondary fw-bold">TARGET STATUS</div>
+                            <div className="small text-secondary fw-bold">{t('tools.monitor_status')}</div>
                             <div className={`h2 fw-bold m-0 ${result.status === 'breached' ? 'text-danger' : 'text-success'}`}>
                                 {result.status === 'breached' ? 'COMPROMISED' : 'CLEAN'}
                             </div>
                         </div>
                         <div className="text-end">
-                            <div className="small text-secondary fw-bold">RISK SCORE</div>
+                            <div className="small text-secondary fw-bold">{t('tools.monitor_risk')}</div>
                             <div className={`display-6 fw-bold ${result.risk_score > 50 ? 'text-danger' : 'text-success'}`}>
                                 {result.risk_score}/100
                             </div>
@@ -99,14 +100,14 @@ export default function EmailChecker() {
                    {result.status === 'breached' ? (
                      <div>
                         <p className="text-secondary border-bottom border-secondary pb-3 mb-4">
-                            <span className="text-danger fw-bold">CRITICAL ALERT:</span> This email was found in known data breaches. Immediate password rotation is recommended.
+                            <span className="text-danger fw-bold">CRITICAL ALERT:</span> {t('tools.audit_breached')}
                         </p>
                         
                         <div className="d-grid gap-3">
                             {result.sources.map((leak, idx) => (
-                                <div key={idx} className="p-3 rounded border border-secondary bg-dark d-flex justify-content-between align-items-center">
+                                <div key={idx} className="p-3 rounded border border-secondary bg-black d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div className="fw-bold text-light">{leak.name}</div>
+                                        <div className="fw-bold text-white">{leak.name}</div>
                                         <div className="small text-secondary">Leak Date: {leak.date}</div>
                                     </div>
                                     <div className="d-flex gap-1">
@@ -125,9 +126,9 @@ export default function EmailChecker() {
                         <div className="mb-3">
                             <i className="bi bi-check-circle text-success fs-1"></i>
                         </div>
-                        <h4 className="fw-bold text-light">No Public Leaks Found</h4>
+                        <h4 className="fw-bold text-white">{t('tools.monitor_no_leaks')}</h4>
                         <p className="text-secondary small mx-auto" style={{ maxWidth: '400px' }}>
-                            We scanned our indexed dark web databases and found no direct matches for this identity.
+                            {t('tools.audit_safe')}
                         </p>
                      </div>
                    )}

@@ -1,9 +1,11 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>notSafe. | API Gateway</title>
+<<<<<<< HEAD
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -13,10 +15,74 @@
   <body class="text-slate-300 min-h-screen flex flex-col items-center justify-center p-6">
     
     <div class="text-center max-w-4xl">
+=======
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #0f172a;
+            color: #cbd5e1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Custom Glass Effect */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid #334155;
+            transition: transform 0.3s ease;
+        }
+>>>>>>> d2768f1 (chore: remove per-folder gitignore and dockerignore, consolidated at root)
         
-        <h1 class="text-5xl md:text-7xl font-extrabold text-white tracking-tighter mb-4">
-            notSafe. <span class="text-red-500">API</span>
+        .glass:hover {
+            transform: scale(1.02);
+        }
+
+        /* Tech Stack Grayscale Animation */
+        .tech-container {
+            opacity: 0.6;
+            filter: grayscale(100%);
+            transition: all 0.5s ease;
+        }
+
+        .tech-container:hover {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+
+        .tech-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* Simple Spin Animation for the button loading state */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-animation {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body class="p-4">
+
+    <div class="container text-center" style="max-width: 900px;">
+
+        <h1 class="display-3 fw-bold text-white mb-3 tracking-tighter">
+            notSafe. <span class="text-danger">API</span>
         </h1>
+<<<<<<< HEAD
         
         <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-full border border-slate-700 mb-16">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -53,15 +119,137 @@
                      class="w-14 h-14 object-contain opacity-50 group-hover:opacity-100 transition duration-300 grayscale group-hover:grayscale-0" 
                      alt="Python">
                 <span class="text-xs font-bold text-slate-500 group-hover:text-white transition">PYTHON</span>
+=======
+
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-2 bg-dark rounded-pill border border-secondary mb-5">
+            <span class="rounded-circle bg-success p-1"></span>
+            <span class="small fw-bold text-secondary text-uppercase ls-wide">System Online v3.0</span>
+        </div>
+
+        <div class="row g-4 mb-5 text-start">
+            
+            <div class="col-md-6">
+                <div class="glass p-4 rounded-4 h-100 position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-25 display-4"></div>
+                    
+                    <h3 class="h5 fw-bold text-white mb-2">Live Telemetry</h3>
+                    <p class="small text-secondary mb-4">Ping the NoSQL database to see real-time scan volume.</p>
+
+                    <div id="stats-display" class="d-none mb-3 p-3 bg-dark bg-opacity-50 rounded border border-secondary font-monospace small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-secondary">TOTAL SCANS:</span>
+                            <span class="text-success fw-bold" id="total-val">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-secondary">PASSWORDS:</span>
+                            <span class="text-primary fw-bold" id="pass-val">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-secondary">EMAILS:</span>
+                            <span class="text-warning fw-bold" id="email-val">0</span>
+                        </div>
+                    </div>
+
+                    <button onclick="fetchStats()" class="btn btn-secondary w-100 fw-bold py-2 d-flex align-items-center justify-content-center gap-2">
+                        <span id="btn-icon">⚡</span> <span id="btn-text">RUN REQUEST</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="glass p-4 rounded-4 h-100 position-relative overflow-hidden" style="border-color: rgba(59, 130, 246, 0.3);">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-25 display-4"></div>
+                    
+                    <h3 class="h5 fw-bold text-white mb-2">Frontend Interface</h3>
+                    <p class="small text-secondary mb-4">Launch the React Client to interact with the dashboards.</p>
+
+                    <a href="http://localhost:5173" target="_blank" class="btn btn-primary w-100 fw-bold py-2 d-flex align-items-center justify-content-center gap-2">
+                        OPEN APP &rarr;
+                    </a>
+                </div>
+>>>>>>> d2768f1 (chore: remove per-folder gitignore and dockerignore, consolidated at root)
             </div>
 
         </div>
 
+<<<<<<< HEAD
         <div class="mt-20 text-[10px] text-slate-700 font-mono">
             API ACCESS RESTRICTED • AUTHORIZED PERSONNEL ONLY
         </div>
+=======
+        <div class="tech-container d-flex flex-wrap justify-content-center gap-4 gap-md-5">
+            
+            <div class="d-flex flex-column align-items-center gap-2">
+                <img src="{{ url_for('static', filename='img/flask.png') }}" alt="Flask" class="tech-logo" />
+                <span class="fw-bold text-secondary small">Flask</span>
+            </div>
+>>>>>>> d2768f1 (chore: remove per-folder gitignore and dockerignore, consolidated at root)
 
+            <div class="d-flex flex-column align-items-center gap-2">
+                <img src="{{ url_for('static', filename='img/python.png') }}" alt="Python" class="tech-logo" />
+                <span class="fw-bold text-secondary small">Python</span>
+            </div>
+
+            <div class="d-flex flex-column align-items-center gap-2">
+                <img src="{{ url_for('static', filename='img/sqlalchemy.png') }}" alt="SQLAlchemy" class="tech-logo" />
+                <span class="fw-bold text-secondary small">SQLAlchemy</span>
+            </div>
+
+            <div class="d-flex flex-column align-items-center gap-2">
+                <img src="{{ url_for('static', filename='img/react.png') }}" alt="React" class="tech-logo" />
+                <span class="fw-bold text-secondary small">React</span>
+            </div>
+
+            <div class="d-flex flex-column align-items-center gap-2">
+                <img src="{{ url_for('static', filename='img/mongo.png') }}" alt="MongoDB" class="tech-logo" />
+                <span class="fw-bold text-secondary small">MongoDB</span>
+            </div>
+
+            <div class="d-flex flex-column align-items-center gap-2">
+                <img src="{{ url_for('static', filename='img/docker.png') }}" alt="Docker" class="tech-logo" />
+                <span class="fw-bold text-secondary small">Docker</span>
+            </div>
+
+        </div>
     </div>
 
+<<<<<<< HEAD
   </body>
+=======
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        async function fetchStats() {
+            const display = document.getElementById('stats-display');
+            const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
+
+            // UI Loading State
+            btnText.innerText = "CONNECTING...";
+            btnIcon.classList.add("spin-animation"); // Using our custom CSS animation
+
+            try {
+                // Fetch from our new Public Controller
+                const res = await fetch('/api/v1/public/stats');
+                const data = await res.json();
+
+                // Update UI
+                document.getElementById('total-val').innerText = data.total_scans.toLocaleString();
+                document.getElementById('pass-val').innerText = data.password_scans.toLocaleString();
+                document.getElementById('email-val').innerText = data.email_scans.toLocaleString();
+
+                // Bootstrap uses d-none for hiding elements
+                display.classList.remove('d-none');
+                btnText.innerText = "REFRESH DATA";
+            } catch (err) {
+                alert("API Error: Is the backend running?");
+                btnText.innerText = "RETRY";
+            } finally {
+                btnIcon.classList.remove("spin-animation");
+            }
+        }
+    </script>
+</body>
+
+>>>>>>> d2768f1 (chore: remove per-folder gitignore and dockerignore, consolidated at root)
 </html>
