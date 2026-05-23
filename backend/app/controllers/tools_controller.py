@@ -89,7 +89,15 @@ class EmailScanner(Resource):
                     breach_list = xon_data.get("breaches", [])
 
                 # ── Parse each breach entry ──────────────────────
-                for b in breach_list[:10]:
+                # Handle nested lists (some API versions return [[...]])
+                flattened_breaches = []
+                for b in breach_list:
+                    if isinstance(b, list):
+                        flattened_breaches.extend(b)
+                    else:
+                        flattened_breaches.append(b)
+
+                for b in flattened_breaches[:10]:
 
                     # Older API shape: plain string (just the breach name)
                     if isinstance(b, str):

@@ -16,6 +16,9 @@ class User(db.Model):
     
     # Foreign Key
     company_id = db.Column(db.String(36), db.ForeignKey('companies.id'), nullable=False)
+    
+    # Relationship
+    company = db.relationship('Company', back_populates='users')
 
     # --- THIS WAS MISSING ---
     @staticmethod

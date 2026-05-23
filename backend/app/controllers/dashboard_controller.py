@@ -19,8 +19,10 @@ ns = Namespace('dashboard', description='Private Company Analytics')
 _TAG_RE = re.compile(r'<[^>]+>')
 
 def sanitize_name(value: str) -> str:
-    """Strip HTML/script tags then HTML-escape any remaining special chars."""
-    stripped = _TAG_RE.sub('', value)
+    """Strip HTML/script tags then HTML-escape any remaining special chars. Idempotent."""
+    # Unescape first to handle already-escaped input and prevent double-escaping
+    unescaped = html.unescape(value)
+    stripped = _TAG_RE.sub('', unescaped)
     return html.escape(stripped).strip()
 
 
@@ -120,16 +122,18 @@ class DepartmentManager(Resource):
         data = request.get_json() or {}
         raw  = data.get('name', '')
 
-        # --- XSS PROTECTION: strip tags, escape, whitelist chars ---
-        name = sanitize_name(raw)
-
-        if not name:
-            return {"error": "Department name required (no HTML/scripts allowed)"}, 400
-        if len(name) > 50:
+        if not raw:
+            return {"error": "Department name required"}, 400
+        if len(raw) > 50:
             return {"error": "Department name too long (max 50 chars)"}, 400
-        # Whitelist: letters, numbers, spaces, hyphens, ampersands, apostrophes
-        if not re.match(r"^[\w\s\-&']+$", name):
+        
+        # Whitelist check on RAW name before sanitization
+        # (Allows ampersands without failing due to escaped semicolons)
+        if not re.match(r"^[\w\s\-&']+$", raw):
             return {"error": "Department name contains invalid characters"}, 400
+
+        # --- XSS PROTECTION: strip tags, escape ---
+        name = sanitize_name(raw)
 
         exists = Department.query.filter_by(
             company_id=current_user.company_id, name=name
@@ -150,10 +154,13 @@ class DepartmentManager(Resource):
     def delete(self, current_user):
         """Delete a department from the current user's company"""
         data = request.get_json() or {}
-        name = sanitize_name(data.get('name', ''))
-
-        if not name:
+        raw  = data.get('name', '')
+        
+        if not raw:
             return {"error": "Department name required"}, 400
+
+        # Sanitize to match how it's stored (idempotent)
+        name = sanitize_name(raw)
 
         dept = Department.query.filter_by(
             company_id=current_user.company_id, name=name

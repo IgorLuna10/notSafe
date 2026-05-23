@@ -12,7 +12,10 @@ import pytest
 _TAG_RE = re.compile(r'<[^>]+>')
 
 def sanitize_name(value: str) -> str:
-    stripped = _TAG_RE.sub('', value)
+    """Strip HTML/script tags then HTML-escape any remaining special chars. Idempotent."""
+    # Unescape first to handle already-escaped input and prevent double-escaping
+    unescaped = html.unescape(value)
+    stripped = _TAG_RE.sub('', unescaped)
     return html.escape(stripped).strip()
 
 def is_valid_prefix(prefix: str) -> bool:
@@ -32,6 +35,7 @@ def is_valid_dept_name(name: str) -> bool:
     ("  HR  ",               "HR"),
     ("IT-Security",          "IT-Security"),
     ("R&D",                  "R&amp;D"),
+    ("R&amp;D",              "R&amp;D"),  # Idempotency test
     ("",                     ""),
 ])
 def test_sanitize_name_valid(input_val, expected):

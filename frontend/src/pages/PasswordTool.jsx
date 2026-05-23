@@ -4,8 +4,6 @@ import PasswordForm from '../components/PasswordForm';
 
 export default function PasswordTool() {
   return (
-    <main>
-      <PasswordForm />
-    </main>
+    <PasswordForm />
   );
 }
