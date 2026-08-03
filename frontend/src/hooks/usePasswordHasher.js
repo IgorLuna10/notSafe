@@ -1,5 +1,4 @@
 import { useState } from 'react';
-
 export const usePasswordHasher = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);

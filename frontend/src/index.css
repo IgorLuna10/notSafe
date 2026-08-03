@@ -4,21 +4,89 @@
 /* @tailwind utilities; */
 
 /* GLOBAL RESETS & THEME */
+:root {
+  --bg-color: #0f172a;
+  --text-color: #cbd5e1;
+  --card-bg: rgba(30, 41, 59, 0.7);
+  --nav-text: #94a3b8;
+  --title-color: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --input-bg: #1e293b;
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='light'] {
+  --bg-color: #f8fafc;
+  --text-color: #334155;
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --nav-text: #64748b;
+  --title-color: #0f172a;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --input-bg: #ffffff;
+  --glass-border: rgba(0, 0, 0, 0.1);
+}
+
 body {
-  background-color: #0f172a; /* Dark Slate Background */
-  color: #cbd5e1;
+  background-color: var(--bg-color) !important;
+  color: var(--text-color);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Global Placeholder Styling */
+input::placeholder, textarea::placeholder {
+  color: var(--nav-text) !important;
+  opacity: 0.7;
 }
 
 /* --- CUSTOM UTILITIES --- */
 
 /* Glassmorphism Card Effect */
 .bg-glass {
-  background: rgba(30, 41, 59, 0.7) !important;
+  background: var(--card-bg) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.border-secondary {
+  border-color: var(--border-color) !important;
+}
+
+.bg-dark {
+  background-color: var(--bg-color) !important;
+}
+
+.bg-black {
+  background-color: rgba(0,0,0,0.2) !important;
+}
+[data-theme='light'] .bg-black {
+  background-color: rgba(0,0,0,0.05) !important;
+}
+
+.text-white {
+  color: var(--title-color) !important;
+}
+
+.text-secondary {
+  color: var(--nav-text) !important;
+}
+
+.text-light {
+  color: var(--title-color) !important;
+}
+
+.form-control-theme {
+  background-color: var(--input-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+.form-control-theme:focus {
+  background-color: var(--input-bg) !important;
+  color: var(--title-color) !important;
+  border-color: #0dcaf0 !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
 }
 
 /* Text Gradient (Blue to Green) */

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../lib/api';
 
 export default function Register() {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,63 +16,58 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
-      navigate('/login'); 
+      await api.post('/auth/register', formData);
+      navigate('/login');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container-fluid vh-100 d-flex align-items-center justify-content-center">
+    <div className="flex-grow-1 d-flex align-items-center justify-content-center p-4">
       <div className="row w-100 justify-content-center">
         <div className="col-12 col-md-6 col-lg-4">
           
-          <div className="card bg-glass text-light shadow-lg">
+          <div className="card bg-glass text-white shadow-lg">
             <div className="card-body p-5">
               
               <div className="text-center mb-4">
-                <h2 className="fw-bold text-gradient">notSafe.</h2>
-                <p className="text-secondary small">Enterprise Security Registration</p>
+                <h1 className="fw-bold text-uppercase text-white" style={{ letterSpacing: '2px' }}>{t('auth.register_title')}</h1>
+                <p className="text-info small fw-bold tracking-wide">{t('auth.register_subtitle')}</p>
               </div>
 
               {error && <div className="alert alert-danger py-2 text-center small">{error}</div>}
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label className="form-label small text-secondary fw-bold">COMPANY NAME</label>
-                  <input type="text" required className="form-control bg-dark text-light border-secondary" placeholder="Acme Corp"
+                  <label className="form-label small text-secondary fw-bold">{t('auth.company_label')}</label>
+                  <input type="text" required className="form-control form-control-theme" placeholder="Acme Corp"
                     value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label small text-secondary fw-bold">WORK EMAIL</label>
-                  <input type="email" required className="form-control bg-dark text-light border-secondary" placeholder="admin@company.com"
+                  <label className="form-label small text-secondary fw-bold">{t('auth.email_label')}</label>
+                  <input type="email" required className="form-control form-control-theme" placeholder="admin@company.com"
                     value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                 </div>
 
                 <div className="mb-4">
-                  <label className="form-label small text-secondary fw-bold">PASSWORD</label>
-                  <input type="password" required className="form-control bg-dark text-light border-secondary" placeholder="••••••••"
+                  <label className="form-label small text-secondary fw-bold">{t('auth.password_label')}</label>
+                  <input type="password" required className="form-control form-control-theme" placeholder="••••••••"
                     value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} />
                 </div>
 
-                <button type="submit" disabled={loading} className="btn btn-primary w-100 py-2 fw-bold">
-                  {loading ? 'CREATING...' : 'CREATE ACCOUNT'}
+                <button type="submit" disabled={loading} className="btn btn-info w-100 py-2 fw-bold text-white shadow">
+                  {loading ? t('auth.btn_initializing') : t('auth.btn_register')}
                 </button>
               </form>
               
-              <div className="mt-4 text-center small">
-                <span className="text-secondary">Already have an account?</span>
-                <Link to="/login" className="text-decoration-none text-info ms-2 fw-bold">Sign In</Link>
+              <div className="mt-4 text-center">
+                <Link to="/login" className="text-decoration-none text-secondary small hover-text-white transition">
+                  {t('auth.back_to_login')}
+                </Link>
               </div>
 
             </div>

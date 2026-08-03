@@ -4,9 +4,10 @@ flask-cors
 flask-limiter
 flask-pymongo
 flask-sqlalchemy
-flask-migrate  
+flask-migrate
 flask-caching
 requests
 python-dotenv
 flask-bcrypt
 pyjwt
+certifi

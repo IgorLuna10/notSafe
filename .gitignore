@@ -1,0 +1,25 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Backend / Python
+__pycache__/
+*.py[cod]
+*.pyo
+backend/app/__pycache__/
+backend/app/controllers/__pycache__/
+backend/app/models/__pycache__/
+backend/app/services/__pycache__/
+backend/.env
+backend/venv/
+backend/.venv/
+
+# Frontend / React
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local

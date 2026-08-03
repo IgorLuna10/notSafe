@@ -1,45 +1,77 @@
 services:
-  # --- BACKEND (Python/Flask) ---
-  notsafe-backend:
-    build: ./backend
-    container_name: notsafe-backend
-    ports:
-      - "5001:5001"
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/notsafe
-      - SECRET_KEY=dev_secret_key
-      - MASTER_API_KEY=notsafe_dev_12345
-      - ADMIN_PASSWORD=admin
-    depends_on:
-      - mongo
-    networks:
-      - notsafe-network
-
-  # --- FRONTEND (React + Nginx) ---
-  notsafe-frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: notsafe-frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - notsafe-backend
-    networks:
-      - notsafe-network
-
-  # --- DATABASE ---
+  # MongoDB - NoSQL Database
   mongo:
     image: mongo:latest
     container_name: notsafe-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: notsafe_db
     volumes:
-      - mongo-data:/data/db
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - notsafe-network
+
+  # Backend - Python/Flask API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: notsafe-backend
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/notsafe_db
+      - SECRET_KEY=${SECRET_KEY:-dev_key_change_in_production}
+      - FLASK_APP=run.py
+      - FLASK_ENV=${FLASK_ENV:-development}
+      - FLASK_DEBUG=${FLASK_DEBUG:-1}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./backend/app:/app/app  # Hot-reload for development
+    networks:
+      - notsafe-network
+    # Development volume mount for live code reloading
+    # Uncomment for production:
+    # restart: always
+
+  # Frontend - React + Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: notsafe-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - notsafe-network
+    # Development live reload (requires vite server)
+    # Uncomment the section below for development with hot reload:
+    # build:
+    #   context: ./frontend
+    #   target: builder
+    # command: npm run dev
+    # volumes:
+    #   - ./frontend/src:/app/src
+    #   - ./frontend/index.html:/app/index.html
+
+volumes:
+  mongo_data:
+    driver: local
 
 networks:
   notsafe-network:
     driver: bridge
-
-volumes:
-  mongo-data:

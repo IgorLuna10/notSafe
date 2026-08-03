@@ -1,24 +1,21 @@
 from app.models.company import Company
-from app.models.department import Department
-from app.extensions import mongo
+from app.extensions import mongo, db
 
 class AnalyticsService:
     """
-    The 'Brain' that bridges SQL (Company Structure) and NoSQL (Security Logs).
+    Bridges SQL (Company Structure) and NoSQL (Security Logs).
     """
 
     @staticmethod
     def get_dashboard_data(company_id, user_role):
-        # 1. SQL QUERY: Get Company Name & Departments
-        company = Company.query.get(company_id)
+        # 1. SQL QUERY — db.session.get() is SQLAlchemy 2.x compatible
+        company = db.session.get(Company, company_id)
         if not company:
             raise ValueError("Company not found")
 
-        # Convert SQL objects to a simple list of names
         dept_names = [d.name for d in company.departments]
 
         # 2. NOSQL QUERY: Aggregate Logs by Department
-        # We use MongoDB's aggregation pipeline for speed
         pipeline = [
             {"$match": {"type": "dept_check", "company_id": company_id}},
             {"$group": {
@@ -28,12 +25,21 @@ class AnalyticsService:
             }}
         ]
         dept_stats = list(mongo.db.checks.aggregate(pipeline))
-        
-        # 3. Calculate Totals (Pure Python Logic)
+
+        # 3. Calculate Totals
         total_checks = sum(d['total'] for d in dept_stats)
         total_breaches = sum(d['breached'] for d in dept_stats)
 
-        # 4. Construct the Data Object
+        # 4. Serialize (convert MongoDB ObjectId to string)
+        serializable_stats = [
+            {
+                "department": str(d['_id']),
+                "total": d['total'],
+                "breached": d['breached']
+            }
+            for d in dept_stats
+        ]
+
         return {
             "company_name": company.name,
             "company_id": company.id,
@@ -43,5 +49,5 @@ class AnalyticsService:
                 "total": total_checks,
                 "breached_count": total_breaches
             },
-            "department_data": dept_stats
+            "department_data": serializable_stats
         }
